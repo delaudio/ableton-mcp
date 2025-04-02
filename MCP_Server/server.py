@@ -105,7 +105,8 @@ class AbletonConnection:
             "create_midi_track", "create_audio_track", "set_track_name",
             "create_clip", "add_notes_to_clip", "set_clip_name",
             "set_tempo", "fire_clip", "stop_clip", "set_device_parameter",
-            "start_playback", "stop_playback", "load_instrument_or_effect"
+            "start_playback", "stop_playback", "load_instrument_or_effect",
+            "set_clip_loop_parameters", "set_clip_looping", "set_clip_warp_settings"
         ]
         
         try:
@@ -651,6 +652,84 @@ def load_drum_kit(ctx: Context, track_index: int, rack_uri: str, kit_path: str) 
     except Exception as e:
         logger.error(f"Error loading drum kit: {str(e)}")
         return f"Error loading drum kit: {str(e)}"
+
+@mcp.tool()
+def set_clip_loop_parameters(ctx: Context, track_index: int, clip_index: int, loop_start: float, loop_end: float) -> str:
+    """
+    Set the loop start and end points for a clip.
+    
+    Parameters:
+    - track_index: The index of the track containing the clip
+    - clip_index: The index of the clip slot containing the clip
+    - loop_start: The loop start position in beats
+    - loop_end: The loop end position in beats
+    """
+    try:
+        ableton = get_ableton_connection()
+        result = ableton.send_command("set_clip_loop_parameters", {
+            "track_index": track_index,
+            "clip_index": clip_index,
+            "loop_start": loop_start,
+            "loop_end": loop_end
+        })
+        return f"Set loop parameters for clip at track {track_index}, slot {clip_index}: start={loop_start}, end={loop_end}"
+    except Exception as e:
+        logger.error(f"Error setting clip loop parameters: {str(e)}")
+        return f"Error setting clip loop parameters: {str(e)}"
+
+@mcp.tool()
+def set_clip_looping(ctx: Context, track_index: int, clip_index: int, looping: bool) -> str:
+    """
+    Enable or disable looping for a clip.
+    
+    Parameters:
+    - track_index: The index of the track containing the clip
+    - clip_index: The index of the clip slot containing the clip
+    - looping: Whether looping should be enabled or disabled
+    """
+    try:
+        ableton = get_ableton_connection()
+        result = ableton.send_command("set_clip_looping", {
+            "track_index": track_index,
+            "clip_index": clip_index,
+            "looping": looping
+        })
+        status = "enabled" if looping else "disabled"
+        return f"Looping {status} for clip at track {track_index}, slot {clip_index}"
+    except Exception as e:
+        logger.error(f"Error setting clip looping: {str(e)}")
+        return f"Error setting clip looping: {str(e)}"
+
+@mcp.tool()
+def set_clip_warp_settings(ctx: Context, track_index: int, clip_index: int, warping: bool, warp_mode: int = None) -> str:
+    """
+    Configure warping settings for an audio clip.
+    
+    Parameters:
+    - track_index: The index of the track containing the clip
+    - clip_index: The index of the clip slot containing the clip
+    - warping: Whether warping should be enabled or disabled
+    - warp_mode: (Optional) The warp mode to use (0=Beats, 1=Tones, 2=Texture, 3=Repitch, 4=Complex, 5=Complex Pro)
+    """
+    try:
+        ableton = get_ableton_connection()
+        params = {
+            "track_index": track_index,
+            "clip_index": clip_index,
+            "warping": warping
+        }
+        
+        if warp_mode is not None:
+            params["warp_mode"] = warp_mode
+            
+        result = ableton.send_command("set_clip_warp_settings", params)
+        
+        status = "enabled" if warping else "disabled"
+        warp_mode_text = f" with mode {warp_mode}" if warp_mode is not None else ""
+        return f"Warping {status}{warp_mode_text} for clip at track {track_index}, slot {clip_index}"
+    except Exception as e:
+        logger.error(f"Error setting clip warp settings: {str(e)}")
+        return f"Error setting clip warp settings: {str(e)}"
 
 # Main execution
 def main():

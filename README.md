@@ -39,7 +39,7 @@ npx -y @smithery/cli install @ahujasid/ableton-mcp --client claude
 - [uv package manager](https://astral.sh/uv)
 
 If you're on Mac, please install uv as:
-```
+```bash
 brew install uv
 ```
 
@@ -130,6 +130,8 @@ Once the config file has been set on Claude, and the remote script is running in
 - Load instruments and effects from Ableton's browser
 - Add notes to MIDI clips
 - Change tempo and other session parameters
+- Control clip looping parameters (start/end points, enable/disable looping)
+- Adjust audio clip warping settings
 
 ## Example Commands
 
@@ -145,7 +147,8 @@ Here are some examples of what you can ask Claude to do:
 - "Add a jazz chord progression to the clip in track 1"
 - "Set the tempo to 120 BPM"
 - "Play the clip in track 2"
-
+- "Set loop points from beat 1 to beat 5 for the clip in track 2"
+- "Enable warping with Complex Pro mode for the audio clip in track 3"
 
 ## Troubleshooting
 

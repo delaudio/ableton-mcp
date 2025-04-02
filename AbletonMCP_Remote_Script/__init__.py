@@ -326,6 +326,28 @@ class AbletonMCP(ControlSurface):
             elif command_type == "get_browser_items_at_path":
                 path = params.get("path", "")
                 response["result"] = self.get_browser_items_at_path(path)
+            elif command_type == "load_drum_kit":
+                track_index = params.get("track_index", 0)
+                rack_uri = params.get("rack_uri", "")
+                kit_path = params.get("kit_path", "")
+                result = self._load_drum_kit(track_index, rack_uri, kit_path)
+            elif command_type == "set_clip_loop_parameters":
+                track_index = params.get("track_index", 0)
+                clip_index = params.get("clip_index", 0)
+                loop_start = params.get("loop_start", 0.0)
+                loop_end = params.get("loop_end", 4.0)
+                result = self._set_clip_loop_parameters(track_index, clip_index, loop_start, loop_end)
+            elif command_type == "set_clip_looping":
+                track_index = params.get("track_index", 0)
+                clip_index = params.get("clip_index", 0)
+                looping = params.get("looping", False)
+                result = self._set_clip_looping(track_index, clip_index, looping)
+            elif command_type == "set_clip_warp_settings":
+                track_index = params.get("track_index", 0)
+                clip_index = params.get("clip_index", 0)
+                warping = params.get("warping", False)
+                warp_mode = params.get("warp_mode", None)
+                result = self._set_clip_warp_settings(track_index, clip_index, warping, warp_mode)
             else:
                 response["status"] = "error"
                 response["message"] = "Unknown command: " + command_type
@@ -1059,4 +1081,98 @@ class AbletonMCP(ControlSurface):
         except Exception as e:
             self.log_message("Error getting browser items at path: {0}".format(str(e)))
             self.log_message(traceback.format_exc())
+            raise
+
+    def _set_clip_loop_parameters(self, track_index, clip_index, loop_start, loop_end):
+        """Set the loop start and end points for a clip"""
+        try:
+            if track_index < 0 or track_index >= len(self._song.tracks):
+                raise IndexError("Track index out of range")
+            
+            track = self._song.tracks[track_index]
+            
+            if clip_index < 0 or clip_index >= len(track.clip_slots):
+                raise IndexError("Clip index out of range")
+            
+            clip_slot = track.clip_slots[clip_index]
+            
+            if not clip_slot.has_clip:
+                raise Exception("No clip in slot")
+            
+            clip = clip_slot.clip
+            clip.loop_start = loop_start
+            clip.loop_end = loop_end
+            
+            result = {
+                "loop_start": clip.loop_start,
+                "loop_end": clip.loop_end
+            }
+            return result
+        except Exception as e:
+            self.log_message(f"Error setting clip loop parameters: {str(e)}")
+            raise
+
+    def _set_clip_looping(self, track_index, clip_index, looping):
+        """Enable or disable looping for a clip"""
+        try:
+            if track_index < 0 or track_index >= len(self._song.tracks):
+                raise IndexError("Track index out of range")
+            
+            track = self._song.tracks[track_index]
+            
+            if clip_index < 0 or clip_index >= len(track.clip_slots):
+                raise IndexError("Clip index out of range")
+            
+            clip_slot = track.clip_slots[clip_index]
+            
+            if not clip_slot.has_clip:
+                raise Exception("No clip in slot")
+            
+            clip = clip_slot.clip
+            clip.looping = looping
+            
+            result = {
+                "looping": clip.looping
+            }
+            return result
+        except Exception as e:
+            self.log_message(f"Error setting clip looping: {str(e)}")
+            raise
+
+    def _set_clip_warp_settings(self, track_index, clip_index, warping, warp_mode=None):
+        """Configure warping settings for an audio clip"""
+        try:
+            if track_index < 0 or track_index >= len(self._song.tracks):
+                raise IndexError("Track index out of range")
+            
+            track = self._song.tracks[track_index]
+            
+            if clip_index < 0 or clip_index >= len(track.clip_slots):
+                raise IndexError("Clip index out of range")
+            
+            clip_slot = track.clip_slots[clip_index]
+            
+            if not clip_slot.has_clip:
+                raise Exception("No clip in slot")
+            
+            clip = clip_slot.clip
+            
+            if not clip.is_audio_clip:
+                raise Exception("Not an audio clip")
+            
+            clip.warping = warping
+            
+            if warp_mode is not None and warping:
+                clip.warp_mode = warp_mode
+            
+            result = {
+                "warping": clip.warping
+            }
+            
+            if warping and hasattr(clip, "warp_mode"):
+                result["warp_mode"] = clip.warp_mode
+                
+            return result
+        except Exception as e:
+            self.log_message(f"Error setting clip warp settings: {str(e)}")
             raise
